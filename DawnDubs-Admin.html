@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>DawnDubs Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08070c;
+    --bg-2:#0d0c14;
+    --panel:#131220;
+    --panel-2:#181729;
+    --line:rgba(255,255,255,.08);
+    --line-2:rgba(255,255,255,.14);
+    --text:#f3f1fa;
+    --muted:#948fac;
+    --muted-2:#6b6683;
+    --violet:#8b5cf6;
+    --violet-2:#b794ff;
+    --cyan:#2fe0c8;
+    --danger:#ff5c78;
+    --danger-2:#ff8095;
+    --radius:18px;
+    --radius-sm:12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Vazirmatn',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh; min-height:100dvh;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:.001s !important; transition-duration:.001s !important;} }
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  input{font-family:inherit; color:inherit;}
+  ::selection{background:var(--violet); color:#fff;}
+
+  #bgfx{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(139,92,246,.16), transparent 60%),
+      radial-gradient(ellipse 50% 35% at 90% 100%, rgba(47,224,200,.09), transparent 60%),
+      var(--bg);
+  }
+  #bgfx .grid{
+    position:absolute; inset:-2px;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:42px 42px; opacity:.13;
+    mask-image:radial-gradient(ellipse 70% 55% at 50% 10%, #000 0%, transparent 78%);
+  }
+
+  #root{position:relative; z-index:1; min-height:100vh; min-height:100dvh;}
+
+  /* ================= LOGIN ================= */
+  #login-screen{
+    min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    width:100%; max-width:380px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:34px 26px;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,.65);
+    animation:cardIn .5s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes cardIn{from{opacity:0; transform:translateY(14px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);}}
+  .login-brand{display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:26px;}
+  .login-brand .badge{
+    width:52px; height:52px; border-radius:14px;
+    background:linear-gradient(145deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .login-brand .badge svg{width:24px; height:24px; stroke:var(--violet-2);}
+  .login-brand h1{font-size:1.3rem; font-weight:800;}
+  .login-brand .tagline{font-size:.78rem; color:var(--muted-2); letter-spacing:.2px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:.83rem; font-weight:700; margin-bottom:8px;}
+  .field input{
+    width:100%; background:var(--bg-2); border:1px solid var(--line-2); border-radius:12px;
+    padding:13px 15px; font-size:.94rem;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .field input::placeholder{color:var(--muted-2);}
+  .field input:focus{outline:none; border-color:var(--violet); box-shadow:0 0 0 4px rgba(139,92,246,.14);}
+  .field.error input{border-color:var(--danger); animation:shake .35s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}}
+
+  .login-error{
+    display:none; align-items:center; gap:8px;
+    background:rgba(255,92,120,.09); border:1px solid rgba(255,92,120,.3); color:#ffb6c3;
+    border-radius:10px; padding:11px 13px; font-size:.82rem; margin-bottom:16px; line-height:1.7;
+  }
+  .login-error.show{display:flex; animation:cardIn .3s ease;}
+  .login-error svg{width:16px; height:16px; flex-shrink:0; stroke:#ffb6c3;}
+
+  .btn{padding:14px 18px; border-radius:14px; font-weight:700; font-size:.95rem; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .15s ease, filter .15s ease, box-shadow .15s ease;}
+  .btn-primary{background:linear-gradient(95deg,var(--violet),#6d3ff0 55%,var(--cyan)); color:#fff; width:100%; box-shadow:0 14px 30px -12px rgba(139,92,246,.55);}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:active{transform:scale(.98);}
+  .btn-primary.loading{pointer-events:none;}
+  .btn-ghost{background:transparent; color:var(--muted); border:1px solid var(--line-2);}
+  .btn-ghost:hover{color:var(--text); border-color:var(--muted-2);}
+  .btn-danger{background:rgba(255,92,120,.12); color:var(--danger-2); border:1px solid rgba(255,92,120,.35);}
+  .btn-danger:hover{background:rgba(255,92,120,.2);}
+  .btn-sm{padding:9px 14px; font-size:.82rem; border-radius:10px;}
+  .spinner{width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin .7s linear infinite; display:none;}
+  .btn-primary.loading .spinner{display:inline-block;}
+  .btn-primary.loading .btn-txt{display:none;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ================= DASHBOARD ================= */
+  #dashboard{display:none; min-height:100vh; min-height:100dvh;}
+  #dashboard.show{display:block; animation:dashIn .45s cubic-bezier(.2,.8,.2,1);}
+  @keyframes dashIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    background:rgba(8,7,12,.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .topbar-brand{display:flex; align-items:center; gap:10px;}
+  .topbar-brand .badge{width:36px; height:36px; border-radius:10px; background:var(--panel-2); border:1px solid var(--line-2); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .topbar-brand .badge svg{width:17px; height:17px; stroke:var(--violet-2);}
+  .topbar-brand h1{font-size:1rem; font-weight:800; line-height:1.3;}
+  .topbar-brand .sub{font-size:.72rem; color:var(--muted-2);}
+  .admin-tag{
+    font-size:.68rem; color:var(--cyan); background:rgba(47,224,200,.1); border:1px solid rgba(47,224,200,.3);
+    padding:3px 9px; border-radius:99px; font-weight:700; margin-inline-start:8px;
+  }
+
+  .wrap{max-width:1080px; margin:0 auto; padding:22px 18px 60px;}
+
+  /* stats */
+  .stats-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:22px;}
+  .stat-card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line); border-radius:14px; padding:16px 16px;
+    position:relative; overflow:hidden;
+  }
+  .stat-card .v{font-size:1.6rem; font-weight:800; margin-bottom:4px;}
+  .stat-card .l{font-size:.76rem; color:var(--muted);}
+  .stat-card::after{content:''; position:absolute; inset:0; opacity:.5; pointer-events:none; background:radial-gradient(circle at 100% 0%, rgba(139,92,246,.14), transparent 60%);}
+  .stat-card.c-tg .v{color:#7cc4ff;}
+  .stat-card.c-rb .v{color:#ff9b83;}
+  .stat-card.c-both .v{color:var(--cyan);}
+
+  /* controls */
+  .controls{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+  .search-box{position:relative;}
+  .search-box svg{position:absolute; inset-inline-start:14px; top:50%; transform:translateY(-50%); width:17px; height:17px; stroke:var(--muted-2); pointer-events:none;}
+  .search-box input{
+    width:100%; background:var(--bg-2); border:1px solid var(--line-2); border-radius:12px;
+    padding:12px 14px 12px 14px; padding-inline-start:40px; font-size:.9rem;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .search-box input:focus{outline:none; border-color:var(--violet); box-shadow:0 0 0 4px rgba(139,92,246,.14);}
+  .search-box input::placeholder{color:var(--muted-2);}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;}
+  .filter-chip{
+    flex-shrink:0; font-size:.8rem; font-weight:600; padding:9px 16px; border-radius:99px;
+    background:var(--bg-2); border:1px solid var(--line-2); color:var(--muted); white-space:nowrap;
+    transition:all .18s ease;
+  }
+  .filter-chip.active{background:rgba(139,92,246,.16); border-color:var(--violet); color:var(--violet-2);}
+
+  .bulk-bar{
+    display:none; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(139,92,246,.09); border:1px solid rgba(139,92,246,.3); border-radius:12px;
+    padding:12px 14px; margin-bottom:16px; animation:cardIn .25s ease;
+  }
+  .bulk-bar.show{display:flex; flex-wrap:wrap;}
+  .bulk-bar .txt{font-size:.85rem; font-weight:700; color:var(--violet-2);}
+  .bulk-actions{display:flex; gap:8px;}
+
+  .list-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .list-header h2{font-size:1.02rem; font-weight:800;}
+  .list-header .danger-link{font-size:.8rem; color:var(--danger-2); font-weight:600; display:flex; align-items:center; gap:5px;}
+  .list-header .danger-link:hover{color:var(--danger);}
+  .list-header .danger-link svg{width:14px; height:14px; stroke:currentColor;}
+
+  /* cards */
+  .app-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media (min-width:720px){ .app-grid{grid-template-columns:1fr 1fr;} }
+
+  .app-card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line); border-radius:14px; padding:16px;
+    display:flex; flex-direction:column; gap:11px;
+    transition:border-color .18s ease, transform .12s ease;
+    animation:cardPop .35s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes cardPop{from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);}}
+  .app-card.checked{border-color:var(--violet);}
+  .app-card.removing{animation:cardOut .32s ease forwards;}
+  @keyframes cardOut{to{opacity:0; transform:scale(.94); max-height:0; margin:0; padding:0; border-width:0;}}
+
+  .app-card-top{display:flex; align-items:flex-start; gap:10px;}
+  .chk{
+    width:20px; height:20px; border-radius:6px; border:1.5px solid var(--line-2); flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center; transition:all .18s ease;
+  }
+  .chk svg{width:11px; height:11px; opacity:0; transform:scale(.5); transition:all .18s ease;}
+  .app-card.checked .chk{background:var(--violet); border-color:var(--violet);}
+  .app-card.checked .chk svg{opacity:1; transform:scale(1);}
+
+  .app-card-info{flex:1; min-width:0;}
+  .app-card-name{font-weight:800; font-size:.98rem; margin-bottom:6px; word-break:break-word;}
+  .chip-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .plat-chip{font-size:.71rem; font-weight:700; padding:4px 9px; border-radius:99px;}
+  .plat-chip.tg{background:rgba(124,196,255,.12); color:#7cc4ff; border:1px solid rgba(124,196,255,.3);}
+  .plat-chip.rb{background:rgba(255,155,131,.12); color:#ff9b83; border:1px solid rgba(255,155,131,.3);}
+
+  .app-card-meta{display:flex; flex-direction:column; gap:5px; font-size:.78rem; color:var(--muted); padding-right:30px;}
+  .app-card-meta .row{display:flex; gap:6px;}
+  .app-card-meta .row b{color:var(--muted); font-weight:600; flex-shrink:0;}
+  .app-card-meta .row span{color:var(--text); word-break:break-word;}
+
+  .app-card-bottom{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:2px; border-top:1px solid var(--line);}
+  .status-pill{font-size:.72rem; padding:4px 10px; border-radius:99px; background:rgba(47,224,200,.1); color:var(--cyan); border:1px solid rgba(47,224,200,.28); font-weight:700;}
+  .view-btn{font-size:.82rem; font-weight:700; color:var(--violet-2); display:flex; align-items:center; gap:5px;}
+  .view-btn svg{width:14px; height:14px; stroke:currentColor;}
+  .view-btn:hover{color:#fff;}
+
+  /* empty / loading / error */
+  .state-box{
+    text-align:center; padding:56px 20px; color:var(--muted);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel)); border:1px dashed var(--line-2); border-radius:16px;
+  }
+  .state-box .emoji{font-size:2.1rem; margin-bottom:12px;}
+  .state-box h3{font-size:1rem; font-weight:800; color:var(--text); margin-bottom:6px;}
+  .state-box p{font-size:.85rem; color:var(--muted); margin-bottom:16px; line-height:1.8;}
+  .loader-ring{width:34px; height:34px; border-radius:50%; border:3px solid var(--line-2); border-top-color:var(--violet); animation:spin .8s linear infinite; margin:0 auto 16px;}
+
+  /* ================= MODAL ================= */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:100; background:rgba(4,3,8,.72); backdrop-filter:blur(4px);
+    display:none; align-items:flex-end; justify-content:center; padding:0;
+    opacity:0; transition:opacity .25s ease;
+  }
+  .modal-overlay.show{display:flex; opacity:1;}
+  @media (min-width:640px){ .modal-overlay{align-items:center; padding:20px;} }
+
+  .modal-box{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line-2);
+    border-radius:20px 20px 0 0;
+    padding:24px 22px 26px;
+    transform:translateY(30px); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .modal-overlay.show .modal-box{transform:translateY(0);}
+  @media (min-width:640px){ .modal-box{border-radius:20px; transform:translateY(14px) scale(.97);} .modal-overlay.show .modal-box{transform:translateY(0) scale(1);} }
+
+  .modal-handle{width:38px; height:4px; background:var(--line-2); border-radius:99px; margin:0 auto 18px;}
+  @media (min-width:640px){ .modal-handle{display:none;} }
+
+  .modal-title{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .modal-title h3{font-size:1.05rem; font-weight:800;}
+  .modal-close{width:30px; height:30px; border-radius:9px; background:var(--bg-2); border:1px solid var(--line-2); display:flex; align-items:center; justify-content:center;}
+  .modal-close svg{width:14px; height:14px; stroke:var(--muted);}
+
+  .detail-rows{display:grid; gap:11px; margin-bottom:20px;}
+  .drow{background:var(--bg-2); border:1px solid var(--line); border-radius:12px; padding:13px 15px;}
+  .drow .k{font-size:.72rem; color:var(--muted-2); font-weight:600; margin-bottom:5px;}
+  .drow .v{font-size:.9rem; font-weight:600; line-height:1.8; word-break:break-word;}
+  .drow .v.muted-v{color:var(--muted); font-weight:400;}
+  .drow .v.motive{font-weight:400; line-height:1.9;}
+
+  .confirm-icon{width:52px; height:52px; border-radius:50%; margin:0 auto 16px; background:rgba(255,92,120,.12); border:1px solid rgba(255,92,120,.3); display:flex; align-items:center; justify-content:center;}
+  .confirm-icon svg{width:24px; height:24px; stroke:var(--danger-2);}
+  .confirm-text{text-align:center; font-size:.92rem; line-height:1.9; color:var(--muted); margin-bottom:22px;}
+  .confirm-text b{color:var(--text);}
+  .modal-btn-row{display:flex; gap:10px;}
+  .modal-btn-row .btn{flex:1;}
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2); border:1px solid var(--line-2); color:var(--text);
+    padding:12px 18px; border-radius:12px; font-size:.85rem; z-index:120;
+    opacity:0; pointer-events:none; transition:all .3s ease; max-width:90vw; text-align:center;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.err{border-color:var(--danger); color:#ffd6dd;}
+  .toast.ok{border-color:var(--cyan); color:#c9fff5;}
+</style>
+</head>
+<body>
+
+<div id="bgfx"><div class="grid"></div></div>
+
+<div id="root">
+
+  <!-- ================= LOGIN ================= -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="14" rx="2"></rect>
+            <path d="M8 21h8"></path>
+            <path d="M12 18v3"></path>
+          </svg>
+        </div>
+        <h1>DawnDubs Admin Panel</h1>
+        <span class="tagline">ورود به مرکز مدیریت تیم دوبله</span>
+      </div>
+
+      <div class="login-error" id="login-error">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span id="login-error-text">این ترکیب رو نمی‌شناسیم، یه بار دیگه امتحان کن 🔒</span>
+      </div>
+
+      <div class="field" id="field-user">
+        <label for="input-user">نام کاربری</label>
+        <input type="text" id="input-user" placeholder="نام کاربری‌تو وارد کن" autocomplete="off">
+      </div>
+      <div class="field" id="field-pass">
+        <label for="input-pass">رمز عبور</label>
+        <input type="password" id="input-pass" placeholder="رمز عبورتو وارد کن" autocomplete="off">
+      </div>
+
+      <button class="btn btn-primary" id="btn-login">
+        <span class="spinner"></span>
+        <span class="btn-txt">ورود به پنل</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div id="dashboard">
+    <div class="topbar">
+      <div class="topbar-brand">
+        <div class="badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 18v3"></path></svg>
+        </div>
+        <div>
+          <h1>DawnDubs Admin Panel <span class="admin-tag">ADMIN</span></h1>
+          <div class="sub">مدیریت درخواست‌های ورود به تیم</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">خروج</button>
+    </div>
+
+    <div class="wrap">
+
+      <!-- stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="v" id="stat-total">۰</div><div class="l">کل ثبت‌نام‌ها</div></div>
+        <div class="stat-card c-both"><div class="v" id="stat-both">۰</div><div class="l">هر دو پیام‌رسان</div></div>
+        <div class="stat-card c-tg"><div class="v" id="stat-tg">۰</div><div class="l">انتخاب Telegram</div></div>
+        <div class="stat-card c-rb"><div class="v" id="stat-rb">۰</div><div class="l">انتخاب Rubika</div></div>
+      </div>
+
+      <!-- controls -->
+      <div class="controls">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search-input" placeholder="جستجو بر اساس اسم، آیدی تلگرام یا روبیکا...">
+        </div>
+        <div class="filter-row" id="filter-row">
+          <button class="filter-chip active" data-f="all">همه</button>
+          <button class="filter-chip" data-f="telegram">Telegram</button>
+          <button class="filter-chip" data-f="rubika">Rubika</button>
+          <button class="filter-chip" data-f="both">هر دو</button>
+        </div>
+      </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <span class="txt" id="bulk-count">۰ مورد انتخاب شده</span>
+        <div class="bulk-actions">
+          <button class="btn btn-ghost btn-sm" id="btn-clear-select">لغو انتخاب</button>
+          <button class="btn btn-danger btn-sm" id="btn-bulk-delete">حذف انتخاب‌شده‌ها</button>
+        </div>
+      </div>
+
+      <div class="list-header">
+        <h2 id="list-count-title">لیست ثبت‌نام‌ها</h2>
+        <button class="danger-link" id="btn-delete-all">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+          حذف همه ثبت‌نام‌ها
+        </button>
+      </div>
+
+      <div id="content-area">
+        <!-- loading / empty / error / grid injected here -->
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= DETAIL MODAL ================= -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <h3>جزئیات ثبت‌نام</h3>
+      <button class="modal-close" data-close="modal-detail"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="detail-rows" id="detail-rows"></div>
+    <button class="btn btn-danger" id="btn-detail-delete" style="width:100%;">حذف این ثبت‌نام</button>
+  </div>
+</div>
+
+<!-- ================= CONFIRM SINGLE/BULK DELETE MODAL ================= -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+    </div>
+    <div class="confirm-text" id="confirm-text">این درخواست از لیست حذف بشه؟</div>
+    <div class="modal-btn-row">
+      <button class="btn btn-ghost" data-close="modal-confirm">لغو</button>
+      <button class="btn btn-danger" id="btn-confirm-ok">حذف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONFIRM DELETE ALL MODAL ================= -->
+<div class="modal-overlay" id="modal-confirm-all">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    </div>
+    <div class="confirm-text">مطمئنی می‌خوای <b>تمام درخواست‌ها</b> حذف بشن؟ این عملیات قابل بازگشت نیست.</div>
+    <div class="modal-btn-row">
+      <button class="btn btn-ghost" data-close="modal-confirm-all">لغو</button>
+      <button class="btn btn-danger" id="btn-confirm-all-ok">حذف همه</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- config ---------------- */
+  var BIN_ID = "6ab94665ffd5d1605334ec0c";
+  var API_KEY = "$2a$10$epYUhOZQnWw4VBhmWB75xuhvbWyw4znG6nH4pxLS7RaBR1zepPbEW";
+  var BASE_URL = "https://api.jsonbin.io/v3/b/" + BIN_ID;
+  var ADMIN_USER = "عطا";
+  var ADMIN_PASS = "1389";
+  var SESSION_KEY = "dawndubs_admin_session";
+
+  /* ---------------- fa digits ---------------- */
+  function fa(n){
+    var map = {'0':'۰','1':'۱','2':'۲','3':'۳','4':'۴','5':'۵','6':'۶','7':'۷','8':'۸','9':'۹'};
+    return String(n).replace(/[0-9]/g, function(d){ return map[d]; });
+  }
+
+  /* ---------------- toast ---------------- */
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg, type){
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 3600);
+  }
+
+  /* ================= LOGIN ================= */
+  var loginScreen = document.getElementById('login-screen');
+  var dashboard = document.getElementById('dashboard');
+  var btnLogin = document.getElementById('btn-login');
+  var inputUser = document.getElementById('input-user');
+  var inputPass = document.getElementById('input-pass');
+  var fieldUser = document.getElementById('field-user');
+  var fieldPass = document.getElementById('field-pass');
+  var loginError = document.getElementById('login-error');
+
+  function clearLoginErrors(){
+    fieldUser.classList.remove('error');
+    fieldPass.classList.remove('error');
+  }
+  inputUser.addEventListener('input', function(){ clearLoginErrors(); loginError.classList.remove('show'); });
+  inputPass.addEventListener('input', function(){ clearLoginErrors(); loginError.classList.remove('show'); });
+  inputPass.addEventListener('keydown', function(e){ if (e.key === 'Enter') attemptLogin(); });
+
+  function attemptLogin(){
+    var u = inputUser.value.trim();
+    var p = inputPass.value;
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      btnLogin.classList.add('loading');
+      setTimeout(function(){
+        btnLogin.classList.remove('loading');
+        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch(e){}
+        enterDashboard();
+      }, 450);
+    } else {
+      loginError.classList.add('show');
+      fieldUser.classList.add('error');
+      fieldPass.classList.add('error');
+      inputPass.value = '';
+    }
+  }
+  btnLogin.addEventListener('click', attemptLogin);
+
+  function enterDashboard(){
+    loginScreen.style.display = 'none';
+    dashboard.classList.add('show');
+    loadData();
+  }
+
+  document.getElementById('btn-logout').addEventListener('click', function(){
+    try { sessionStorage.removeItem(SESSION_KEY); } catch(e){}
+    dashboard.classList.remove('show');
+    loginScreen.style.display = 'flex';
+    inputUser.value = '';
+    inputPass.value = '';
+  });
+
+  /* auto-login if session already active */
+  (function checkSession(){
+    var active = false;
+    try { active = sessionStorage.getItem(SESSION_KEY) === '1'; } catch(e){}
+    if (active) enterDashboard();
+  })();
+
+  /* ================= DATA ================= */
+  var allApps = [];
+  var currentFilter = 'all';
+  var currentSearch = '';
+  var selectedIds = {};
+  var contentArea = document.getElementById('content-area');
+
+  function loadData(){
+    renderLoading();
+    fetch(BASE_URL + '/latest', { method: 'GET', headers: { 'X-Master-Key': API_KEY } })
+      .then(function(res){
+        if (!res.ok) throw new Error('fetch-failed');
+        return res.json();
+      })
+      .then(function(data){
+        var record = (data && data.record) ? data.record : {};
+        allApps = Array.isArray(record.applications) ? record.applications : [];
+        selectedIds = {};
+        renderAll();
+      })
+      .catch(function(){
+        renderError();
+      });
+  }
+
+  function renderLoading(){
+    contentArea.innerHTML =
+      '<div class="state-box"><div class="loader-ring"></div><h3>در حال دریافت اطلاعات...</h3><p>چند لحظه صبر کن، داریم صف رو می‌آریم 🎧</p></div>';
+  }
+
+  function renderError(){
+    contentArea.innerHTML =
+      '<div class="state-box"><div class="emoji">⚠️</div><h3>یه مشکلی پیش اومد</h3><p>نتونستیم به JSONBin وصل بشیم. اتصالت رو چک کن و دوباره امتحان کن.</p><button class="btn btn-primary" id="btn-retry" style="width:auto; padding:12px 24px;">تلاش مجدد</button></div>';
+    document.getElementById('btn-retry').addEventListener('click', loadData);
+  }
+
+  /* ---------------- stats ---------------- */
+  function computeStats(){
+    var total = allApps.length;
+    var tg = 0, rb = 0, both = 0;
+    allApps.forEach(function(a){
+      var msgs = Array.isArray(a.messengers) ? a.messengers : [];
+      var hasTg = msgs.indexOf('telegram') !== -1;
+      var hasRb = msgs.indexOf('rubika') !== -1;
+      if (hasTg) tg++;
+      if (hasRb) rb++;
+      if (hasTg && hasRb) both++;
+    });
+    return { total: total, tg: tg, rb: rb, both: both };
+  }
+
+  function renderStats(){
+    var s = computeStats();
+    document.getElementById('stat-total').textContent = fa(s.total);
+    document.getElementById('stat-tg').textContent = fa(s.tg);
+    document.getElementById('stat-rb').textContent = fa(s.rb);
+    document.getElementById('stat-both').textContent = fa(s.both);
+  }
+
+  /* ---------------- filter + search + sort ---------------- */
+  function getEntryTime(a){
+    var t = a.submittedAt ? Date.parse(a.submittedAt) : NaN;
+    return isNaN(t) ? 0 : t;
+  }
+
+  function getFilteredSorted(){
+    var q = currentSearch.trim().toLowerCase();
+    var list = allApps.filter(function(a){
+      var msgs = Array.isArray(a.messengers) ? a.messengers : [];
+      var hasTg = msgs.indexOf('telegram') !== -1;
+      var hasRb = msgs.indexOf('rubika') !== -1;
+
+      if (currentFilter === 'telegram' && !hasTg) return false;
+      if (currentFilter === 'rubika' && !hasRb) return false;
+      if (currentFilter === 'both' && !(hasTg && hasRb)) return false;
+
+      if (q) {
+        var hay = [
+          a.name || '',
+          a.telegramId || '',
+          a.rubikaId || ''
+        ].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    list.sort(function(x, y){ return getEntryTime(y) - getEntryTime(x); });
+    return list;
+  }
+
+  /* ---------------- render list ---------------- */
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  function formatDate(a){
+    if (a.submittedAtFa) return a.submittedAtFa;
+    if (a.submittedAt) {
+      var t = Date.parse(a.submittedAt);
+      if (!isNaN(t)) return new Date(t).toLocaleString('fa-IR');
+    }
+    return 'تاریخ نامشخص';
+  }
+
+  function messengerChips(a){
+    var msgs = Array.isArray(a.messengers) ? a.messengers : [];
+    var html = '';
+    if (msgs.indexOf('telegram') !== -1) html += '<span class="plat-chip tg">Telegram</span>';
+    if (msgs.indexOf('rubika') !== -1) html += '<span class="plat-chip rb">Rubika</span>';
+    if (!html) html = '<span class="plat-chip" style="color:var(--muted-2); border:1px solid var(--line-2);">ثبت نشده</span>';
+    return html;
+  }
+
+  function renderAll(){
+    renderStats();
+    var list = getFilteredSorted();
+
+    var countTitle = document.getElementById('list-count-title');
+    countTitle.textContent = 'لیست ثبت‌نام‌ها (' + fa(list.length) + ' مورد)';
+
+    if (allApps.length === 0) {
+      contentArea.innerHTML =
+        '<div class="state-box"><div class="emoji">🎮</div><h3>فعلاً کسی وارد صف نشده</h3><p>وقتی کسی از سایت ثبت‌نام کنه، اینجا نشون داده می‌شه.</p></div>';
+      updateBulkBar();
+      return;
+    }
+
+    if (list.length === 0) {
+      contentArea.innerHTML =
+        '<div class="state-box"><div class="emoji">🔍</div><h3>چیزی پیدا نشد</h3><p>جستجو یا فیلترت رو تغییر بده.</p></div>';
+      updateBulkBar();
+      return;
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'app-grid';
+
+    list.forEach(function(a, idx){
+      var card = document.createElement('div');
+      card.className = 'app-card' + (selectedIds[a.id] ? ' checked' : '');
+      card.style.animationDelay = (idx * 0.03) + 's';
+      card.setAttribute('data-id', a.id);
+
+      var motive = a.motive ? a.motive : null;
+      var motivePreview = motive ? (motive.length > 70 ? motive.slice(0, 70) + '…' : motive) : 'انگیزه‌ای ثبت نشده';
+
+      card.innerHTML =
+        '<div class="app-card-top">' +
+          '<div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>' +
+          '<div class="app-card-info">' +
+            '<div class="app-card-name">' + escapeHtml(a.name || 'بدون نام') + '</div>' +
+            '<div class="chip-row">' + messengerChips(a) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="app-card-meta">' +
+          (a.telegramId ? '<div class="row"><b>تلگرام:</b><span>' + escapeHtml(a.telegramId) + '</span></div>' : '') +
+          (a.rubikaId ? '<div class="row"><b>روبیکا:</b><span>' + escapeHtml(a.rubikaId) + '</span></div>' : '') +
+          '<div class="row"><b>انگیزه:</b><span>' + escapeHtml(motivePreview) + '</span></div>' +
+          '<div class="row"><b>تاریخ:</b><span>' + escapeHtml(formatDate(a)) + '</span></div>' +
+        '</div>' +
+        '<div class="app-card-bottom">' +
+          '<span class="status-pill">' + escapeHtml(a.status || 'در انتظار بررسی') + '</span>' +
+          '<button class="view-btn" data-view="' + escapeHtml(a.id) + '">مشاهده <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>' +
+        '</div>';
+
+      card.querySelector('.chk').addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleSelect(a.id, card);
+      });
+      card.querySelector('[data-view]').addEventListener('click', function(e){
+        e.stopPropagation();
+        openDetail(a.id);
+      });
+
+      grid.appendChild(card);
+    });
+
+    contentArea.innerHTML = '';
+    contentArea.appendChild(grid);
+    updateBulkBar();
+  }
+
+  function toggleSelect(id, cardEl){
+    if (selectedIds[id]) delete selectedIds[id];
+    else selectedIds[id] = true;
+    cardEl.classList.toggle('checked', !!selectedIds[id]);
+    updateBulkBar();
+  }
+
+  function updateBulkBar(){
+    var count = Object.keys(selectedIds).length;
+    var bar = document.getElementById('bulk-bar');
+    bar.classList.toggle('show', count > 0);
+    document.getElementById('bulk-count').textContent = fa(count) + ' مورد انتخاب شده';
+  }
+
+  document.getElementById('btn-clear-select').addEventListener('click', function(){
+    selectedIds = {};
+    renderAll();
+  });
+
+  /* ---------------- search / filter events ---------------- */
+  document.getElementById('search-input').addEventListener('input', function(e){
+    currentSearch = e.target.value;
+    renderAll();
+  });
+
+  document.querySelectorAll('.filter-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      currentFilter = chip.getAttribute('data-f');
+      renderAll();
+    });
+  });
+
+  /* ================= MODALS ================= */
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+  document.querySelectorAll('[data-close]').forEach(function(btn){
+    btn.addEventListener('click', function(){ closeModal(btn.getAttribute('data-close')); });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function(ov){
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeModal(ov.id); });
+  });
+
+  /* ---------------- detail modal ---------------- */
+  var detailRows = document.getElementById('detail-rows');
+  var btnDetailDelete = document.getElementById('btn-detail-delete');
+  var currentDetailId = null;
+
+  function openDetail(id){
+    var a = allApps.find(function(x){ return x.id === id; });
+    if (!a) return;
+    currentDetailId = id;
+
+    var msgs = Array.isArray(a.messengers) ? a.messengers : [];
+    var msgLabel = msgs.map(function(m){ return m === 'telegram' ? 'Telegram' : 'Rubika'; }).join(' + ') || 'ثبت نشده';
+
+    var html = '';
+    html += drow('نام / نام مستعار', a.name || '—');
+    html += drow('انگیزه پیوستن', a.motive ? a.motive : 'انگیزه‌ای ثبت نشده', !a.motive, true);
+    html += drow('پیام‌رسان انتخاب‌شده', msgLabel);
+    html += drow('آیدی تلگرام', a.telegramId ? a.telegramId : '—', !a.telegramId);
+    html += drow('آیدی روبیکا', a.rubikaId ? a.rubikaId : '—', !a.rubikaId);
+    html += drow('تاریخ و ساعت ثبت‌نام', formatDate(a));
+    html += drow('ID ثبت‌نام', a.id || '—');
+    html += drow('وضعیت', a.status || 'در انتظار بررسی');
+
+    detailRows.innerHTML = html;
+    openModal('modal-detail');
+  }
+  function drow(k, v, muted, motive){
+    return '<div class="drow"><div class="k">' + k + '</div><div class="v' + (muted ? ' muted-v' : '') + (motive ? ' motive' : '') + '">' + escapeHtml(v) + '</div></div>';
+  }
+
+  btnDetailDelete.addEventListener('click', function(){
+    closeModal('modal-detail');
+    setTimeout(function(){ askConfirmSingle(currentDetailId); }, 200);
+  });
+
+  /* ---------------- delete confirm (single / bulk) ---------------- */
+  var pendingDeleteIds = [];
+  var confirmText = document.getElementById('confirm-text');
+
+  function askConfirmSingle(id){
+    pendingDeleteIds = [id];
+    confirmText.textContent = 'این درخواست از لیست حذف بشه؟';
+    openModal('modal-confirm');
+  }
+  function askConfirmBulk(ids){
+    pendingDeleteIds = ids.slice();
+    confirmText.textContent = fa(ids.length) + ' ثبت‌نام انتخاب‌شده حذف بشن؟';
+    openModal('modal-confirm');
+  }
+
+  document.getElementById('btn-bulk-delete').addEventListener('click', function(){
+    var ids = Object.keys(selectedIds);
+    if (ids.length === 0) return;
+    askConfirmBulk(ids);
+  });
+
+  document.getElementById('btn-confirm-ok').addEventListener('click', function(){
+    closeModal('modal-confirm');
+    performDelete(pendingDeleteIds);
+  });
+
+  /* ---------------- delete all ---------------- */
+  document.getElementById('btn-delete-all').addEventListener('click', function(){
+    if (allApps.length === 0) { showToast('لیست که همین الانم خالیه 🙂'); return; }
+    openModal('modal-confirm-all');
+  });
+  document.getElementById('btn-confirm-all-ok').addEventListener('click', function(){
+    closeModal('modal-confirm-all');
+    performDelete(allApps.map(function(a){ return a.id; }));
+  });
+
+  /* ---------------- actual delete + JSONBin sync ---------------- */
+  function performDelete(ids){
+    if (!ids || ids.length === 0) return;
+    var idSet = {};
+    ids.forEach(function(id){ idSet[id] = true; });
+
+    // optimistic UI: fade out matching cards
+    ids.forEach(function(id){
+      var el = document.querySelector('.app-card[data-id="' + cssEscape(id) + '"]');
+      if (el) el.classList.add('removing');
+    });
+
+    var updatedApps = allApps.filter(function(a){ return !idSet[a.id]; });
+
+    fetch(BASE_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+      body: JSON.stringify({ applications: updatedApps })
+    })
+    .then(function(res){
+      if (!res.ok) throw new Error('delete-failed');
+      return res.json();
+    })
+    .then(function(){
+      allApps = updatedApps;
+      ids.forEach(function(id){ delete selectedIds[id]; });
+      showToast(ids.length > 1 ? fa(ids.length) + ' ثبت‌نام حذف شد ✅' : 'ثبت‌نام حذف شد ✅', 'ok');
+      renderAll();
+    })
+    .catch(function(){
+      showToast('حذف انجام نشد، دوباره امتحان کن ⚠️', 'err');
+      ids.forEach(function(id){
+        var el = document.querySelector('.app-card[data-id="' + cssEscape(id) + '"]');
+        if (el) el.classList.remove('removing');
+      });
+    });
+  }
+
+  function cssEscape(str){
+    return String(str).replace(/["\\]/g, '\\$&');
+  }
+
+})();
+</script>
+</body>
+</html>
